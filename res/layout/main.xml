@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+>
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Hello World, MainActivity"
+    />
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Discover Bag"
+        android:onClick="discoverBag"
+    />
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Message"
+        android:onClick="sendMessage"
+    />
+    <ListView
+        android:id="@+id/found_devices" 
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+    />
+
+</LinearLayout>
+
