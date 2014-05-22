@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -29,22 +30,16 @@ public class MainActivity extends Activity {
     private BluetoothAdapter blthAdapter;
     private BluetoothSocket socket;
     private UUID uuid = UUID.randomUUID();
-    private ArrayList<BluetoothDevice> foundDevices;
     private BroadcastReceiver broadcastMessageReceiver;
     private final static int REQUEST_ENABLE_BT = 42;
-    private ArrayAdapter<String> mArrayAdapter;
+    private ArrayAdapter<BluetoothDevice> mArrayAdapter;
     private final BroadcastReceiver searchDevicesReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            // When discovery finds a device
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // Add the name and address to an array adapter to show in a ListView
-                mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                mArrayAdapter.notifyDataSetChanged();
+                mArrayAdapter.add(device);
             }
-
         }
     };
 
@@ -55,33 +50,47 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         blthAdapter = BluetoothAdapter.getDefaultAdapter();
-        mArrayAdapter = new ArrayAdapter<String>(this, R.id.found_devices);
-//        blthAdapter = BluetoothAdapter.getDefaultAdapter();
         if (blthAdapter == null || !blthAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
-
         setContentView(R.layout.main);
         broadcastMessageReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                // Get extra data included in the Intent
                 String message = intent.getStringExtra("message");
                 Log.d("receiver", "Got message: " + message);
             }
         };
-        ListView devicesList = (ListView) findViewById(R.id.found_devices);
-//        devicesList.setOnClickListener(new View.OnClickListener() {
-//
-//            public void onClick(View v) {
-//v.get
-//            }
-//        });
+        ListView devicesList = (ListView) findViewById(R.id.found_devices_list);
+        mArrayAdapter = new ArrayAdapter<BluetoothDevice>(MainActivity.this, android.R.layout.simple_list_item_1);
+        devicesList.setAdapter(mArrayAdapter);
+        devicesList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-        LocalBroadcastManager
-                .getInstance(this).registerReceiver(broadcastMessageReceiver,
-                        new IntentFilter("custom-event-name"));
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                AsyncTask<Integer, Void, Void> connectTask = new AsyncTask<Integer, Void, Void>() {
+                    @Override
+                    protected Void doInBackground(Integer... params) {
+                        try {
+                            BluetoothDevice device = mArrayAdapter.getItem(params[0]);
+                            socket = device.createRfcommSocketToServiceRecord(uuid);
+                            socket.connect();
+                        } catch (IOException e) {
+                            Log.d("BLUETOOTH_CLIENT", e.getMessage());
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void result) {
+//                        switchViews();
+                    }
+                };
+                connectTask.execute(position);
+            }
+        });
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastMessageReceiver, new IntentFilter("custom-event-name"));
     }
 
     @Override
@@ -91,20 +100,20 @@ public class MainActivity extends Activity {
     }
 
     public void discoverBag(View view) {
-
-        Set<BluetoothDevice> pairedDevices = blthAdapter.getBondedDevices();
-// If there are paired devices
-        if (pairedDevices.size() > 0) {
-            // Loop through paired devices
-            for (BluetoothDevice device : pairedDevices) {
-                // Add the name and address to an array adapter to show in a ListView
-                mArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+        try {
+            Set<BluetoothDevice> pairedDevices = blthAdapter.getBondedDevices();
+            if (pairedDevices.size() > 0) {
+                for (BluetoothDevice device : pairedDevices) {
+                    mArrayAdapter.add(device);
+                }
+            } else {
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                registerReceiver(searchDevicesReceiver, filter); // Don't forget to unregister during onDestroy
             }
-            mArrayAdapter.notifyDataSetChanged();
-        } else {
-            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-            registerReceiver(searchDevicesReceiver, filter); // Don't forget to unregister during onDestroy
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
+
     }
 
     public void sendMessage(View view) {
