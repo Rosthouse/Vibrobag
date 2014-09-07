@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MainActivity</string>
+    <string name="app_name">Vibrobag</string>
+    <string name="ble_not_supported">BLE is not supported on this device</string>
+    <string name="HEART_RATE_MEASUREMENT">00002a37-0000-1000-8000-00805f9b34fb</string>
+    <string name="CLIENT_CHARACTERISTIC_CONFIG">00002902-0000-1000-8000-00805f9b34fb</string>
 </resources>

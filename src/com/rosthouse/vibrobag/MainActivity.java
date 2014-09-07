@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -19,8 +20,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,6 +41,20 @@ public class MainActivity extends Activity {
             }
         }
     };
+    private BluetoothAdapter.LeScanCallback mLeScanCallback
+            = new BluetoothAdapter.LeScanCallback() {
+                @Override
+                public void onLeScan(final BluetoothDevice device, int rssi,
+                        byte[] scanRecord) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+//               mLeDeviceListAdapter.addDevice(device);
+//               mLeDeviceListAdapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+            };
 
     /**
      * Called when the activity is first created.
@@ -50,6 +63,10 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         blthAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
+            finish();
+        }
         if (blthAdapter == null || !blthAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -100,20 +117,20 @@ public class MainActivity extends Activity {
     }
 
     public void discoverBag(View view) {
-        try {
-            Set<BluetoothDevice> pairedDevices = blthAdapter.getBondedDevices();
-            if (pairedDevices.size() > 0) {
-                for (BluetoothDevice device : pairedDevices) {
-                    mArrayAdapter.add(device);
-                }
-            } else {
-                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-                registerReceiver(searchDevicesReceiver, filter); // Don't forget to unregister during onDestroy
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
+        /*try {
+         Set<BluetoothDevice> pairedDevices = blthAdapter.getBondedDevices();
+         if (pairedDevices.size() > 0) {
+         for (BluetoothDevice device : pairedDevices) {
+         mArrayAdapter.add(device);
+         }
+         } else {
+         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+         registerReceiver(searchDevicesReceiver, filter); // Don't forget to unregister during onDestroy
+         }
+         } catch (Exception e) {
+         System.out.println(e.getMessage());
+         }*/
     }
 
     public void sendMessage(View view) {
