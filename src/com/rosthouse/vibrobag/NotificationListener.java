@@ -40,9 +40,6 @@ public class NotificationListener extends AccessibilityService {
         eventText = eventText + event.getContentDescription();
         LocalBroadcastManager.getInstance(this);
 
-        // Do something nifty with this text, like speak the composed string
-        // back to the user.
-//    speakToUser(eventText);
     }
 
     @Override
